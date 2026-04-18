@@ -6,34 +6,19 @@ interface Props {
   onUploadSuccess: (data: UploadResponse, file: File) => void;
 }
 
-// Allowed file types
-const ACCEPTED_TYPES = [
-  "application/pdf",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-  "text/plain",
-  "image/jpeg",
-  "image/png",
-];
-
 const ACCEPTED_EXTENSIONS = [".pdf", ".docx", ".txt", ".pptx", ".jpg", ".png"];
 
-const FILE_LABELS: Record<string, string> = {
-  ".pdf":  "📄 PDF",
-  ".docx": "📝 Word",
-  ".txt":  "📃 Text",
-  ".pptx": "📊 PowerPoint",
-  ".jpg":  "🖼 Image",
-  ".png":  "🖼 Image",
-};
+const FILE_INFO = [
+  { ext: ".pdf",  icon: "📄", label: "PDF",         color: "bg-red-100 text-red-600" },
+  { ext: ".docx", icon: "📝", label: "Word",         color: "bg-blue-100 text-blue-600" },
+  { ext: ".pptx", icon: "📊", label: "PowerPoint",   color: "bg-orange-100 text-orange-600" },
+  
+];
 
-function getFileExtension(filename: string): string {
-  return filename.slice(filename.lastIndexOf(".")).toLowerCase();
-}
-
-function isValidFile(file: File): boolean {
-  const ext = getFileExtension(file.name);
-  return ACCEPTED_EXTENSIONS.includes(ext);
+function isValidFile(filename: string) {
+  return ACCEPTED_EXTENSIONS.some((ext) =>
+    filename.toLowerCase().endsWith(ext)
+  );
 }
 
 export default function UploadPanel({ onUploadSuccess }: Props) {
@@ -42,14 +27,12 @@ export default function UploadPanel({ onUploadSuccess }: Props) {
   const [dragOver, setDragOver] = useState(false);
 
   async function processFile(file: File) {
-    if (!isValidFile(file)) {
-      setError("Unsupported file type. Please upload PDF, DOCX, TXT, PPTX, JPG or PNG.");
+    if (!isValidFile(file.name)) {
+      setError("Unsupported file. Please upload PDF, DOCX, TXT, PPTX, JPG or PNG.");
       return;
     }
-
     setUploading(true);
     setError(null);
-
     try {
       const data = await uploadPDF(file);
       onUploadSuccess(data, file);
@@ -74,30 +57,20 @@ export default function UploadPanel({ onUploadSuccess }: Props) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-full bg-gray-50 p-8">
-      <div className="w-full max-w-md">
+    <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 p-8">
+      <div className="w-full max-w-lg">
 
-        {/* Header */}
-        <div className="text-center mb-6">
-          <span className="text-5xl">📚</span>
-          <h2 className="text-2xl font-bold text-gray-800 mt-3">
-            Upload a Document
+  {/* Hero */}
+  <div className="text-center mb-8 pt-6">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-600 to-blue-600 rounded-3xl shadow-2xl shadow-purple-300 dark:shadow-purple-900 mb-5">
+            <span className="text-4xl">🧠</span>
+          </div>
+          <h2 className="text-3xl font-black text-gray-900 dark:text-white">
+            AskMyDocs
           </h2>
-          <p className="text-gray-500 text-sm mt-1">
-            Chat with any document using AI
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
+            Upload a document and start an AI-powered conversation
           </p>
-        </div>
-
-        {/* Supported formats */}
-        <div className="flex flex-wrap justify-center gap-2 mb-5">
-          {ACCEPTED_EXTENSIONS.map((ext) => (
-            <span
-              key={ext}
-              className="px-2 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded-full border border-blue-200"
-            >
-              {FILE_LABELS[ext]}
-            </span>
-          ))}
         </div>
 
         {/* Drop Zone */}
@@ -105,27 +78,26 @@ export default function UploadPanel({ onUploadSuccess }: Props) {
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all ${
+          className={`border-2 border-dashed rounded-3xl p-10 text-center transition-all duration-200 ${
             dragOver
-              ? "border-blue-400 bg-blue-50 scale-105"
-              : "border-gray-300 bg-white hover:border-blue-300"
+              ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 scale-[1.02]"
+              : "border-purple-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-purple-400 hover:shadow-xl hover:shadow-purple-100 dark:hover:shadow-none"
           }`}
         >
-          <p className="text-4xl mb-3">
+          <div className="text-5xl mb-4">
             {dragOver ? "📂" : "📁"}
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-1 font-medium">
+            Drag & drop your document here
           </p>
-          <p className="text-gray-600 text-sm mb-4">
-            Drag & drop your file here, or
-          </p>
+          <p className="text-gray-400 dark:text-gray-600 text-xs mb-6">or</p>
 
           <label className="cursor-pointer">
-            <span
-              className={`px-6 py-3 rounded-xl text-sm font-semibold transition-colors inline-block ${
-                uploading
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg"
-              }`}
-            >
+            <span className={`px-8 py-3 rounded-2xl text-sm font-bold inline-block transition-all shadow-lg ${
+              uploading
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 hover:scale-105 active:scale-95 shadow-purple-200"
+            }`}>
               {uploading ? (
                 <span className="flex items-center gap-2">
                   <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
@@ -134,9 +106,7 @@ export default function UploadPanel({ onUploadSuccess }: Props) {
                   </svg>
                   Processing...
                 </span>
-              ) : (
-                "Choose File"
-              )}
+              ) : "Choose File"}
             </span>
             <input
               type="file"
@@ -146,30 +116,33 @@ export default function UploadPanel({ onUploadSuccess }: Props) {
               disabled={uploading}
             />
           </label>
-
-          <p className="text-xs text-gray-400 mt-3">
-            Supports PDF, Word, Text, PowerPoint, Images
-          </p>
         </div>
 
         {/* Error */}
         {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex items-center gap-2">
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-2xl text-sm text-red-600 flex items-center gap-2">
             <span>❌</span> {error}
           </div>
         )}
 
-        {/* Tips */}
-        <div className="mt-6 bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-xs font-semibold text-gray-600 mb-2">💡 Tips</p>
-          <ul className="text-xs text-gray-500 space-y-1">
-            <li>• PDFs work best with selectable text</li>
-            <li>• Images will be OCR scanned for text</li>
-            <li>• Large files may take a moment to process</li>
-            <li>• Each file becomes a separate chat session</li>
-          </ul>
+        {/* Supported formats */}
+        <div className="mt-6">
+          <p className="text-xs text-gray-400 dark:text-gray-600 font-semibold uppercase tracking-wider text-center mb-3">
+            Supported Formats
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {FILE_INFO.map((f) => (
+              <span
+                key={f.ext}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 ${f.color}`}
+              >
+                {f.icon} {f.label}
+              </span>
+            ))}
+          </div>
         </div>
 
+        
       </div>
     </div>
   );
